@@ -246,7 +246,7 @@ class MainActivity : AppCompatActivity() {
         tvHeartbeat.text = if (hb > 0) "Heartbeat: ${(System.currentTimeMillis() - hb) / 1000}s ago" else "Heartbeat: never"
         tvStats.text     = "Sent today: ${GatewayService.sentToday}  |  Poll: ${prefs.pollIntervalSec}s  |  Status: ${GatewayService.lastStatus}"
         btnToggle.text   = if (paused) "▶  Resume" else "⏸  Pause"
-        tvLogs.text      = if (logs.isEmpty()) "(no logs)" else logs.takeLast(50).joinToString("\n")
+        tvLogs.text      = if (logs.isEmpty()) "(no logs)" else logs.toList().takeLast(50).joinToString("\n")
     }
 
     // ── Actions ───────────────────────────────────────────────────────────────
