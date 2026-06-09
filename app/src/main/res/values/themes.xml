@@ -1,0 +1,11 @@
+<?xml version="1.0" encoding="utf-8"?>
+<resources>
+    <style name="Theme.SurfIQGateway" parent="Theme.MaterialComponents.DayNight.NoActionBar">
+        <item name="colorPrimary">#0369a1</item>
+        <item name="colorPrimaryVariant">#0c4a6e</item>
+        <item name="colorOnPrimary">#ffffff</item>
+        <item name="colorSurface">#1e293b</item>
+        <item name="android:windowBackground">#0f172a</item>
+        <item name="android:statusBarColor">#0f172a</item>
+    </style>
+</resources>

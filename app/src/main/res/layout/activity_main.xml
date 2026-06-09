@@ -1,0 +1,196 @@
+<?xml version="1.0" encoding="utf-8"?>
+<ScrollView xmlns:android="http://schemas.android.com/apk/res/android"
+    android:layout_width="match_parent"
+    android:layout_height="match_parent"
+    android:background="#0f172a"
+    android:fillViewport="true">
+
+    <LinearLayout
+        android:layout_width="match_parent"
+        android:layout_height="wrap_content"
+        android:orientation="vertical"
+        android:padding="16dp">
+
+        <!-- Header -->
+        <TextView
+            android:layout_width="match_parent"
+            android:layout_height="wrap_content"
+            android:text="SurfIQ SMS Gateway"
+            android:textColor="#38bdf8"
+            android:textSize="22sp"
+            android:textStyle="bold"
+            android:paddingBottom="4dp" />
+
+        <TextView
+            android:layout_width="match_parent"
+            android:layout_height="wrap_content"
+            android:text="Private transactional SMS gateway"
+            android:textColor="#64748b"
+            android:textSize="12sp"
+            android:paddingBottom="16dp" />
+
+        <!-- ════════════════════════════════════════
+             LOGIN PANEL
+             ════════════════════════════════════════ -->
+        <LinearLayout
+            android:id="@+id/layout_login"
+            android:layout_width="match_parent"
+            android:layout_height="wrap_content"
+            android:orientation="vertical"
+            android:background="#1e293b"
+            android:padding="16dp"
+            android:layout_marginBottom="12dp">
+
+            <TextView android:layout_width="match_parent" android:layout_height="wrap_content"
+                android:text="Gateway Configuration" android:textColor="#94a3b8"
+                android:textSize="14sp" android:textStyle="bold" android:paddingBottom="12dp"/>
+
+            <TextView android:layout_width="match_parent" android:layout_height="wrap_content"
+                android:text="Supabase URL" android:textColor="#94a3b8" android:textSize="12sp"/>
+            <EditText android:id="@+id/et_supabase_url"
+                android:layout_width="match_parent" android:layout_height="wrap_content"
+                android:hint="https://xxxx.supabase.co"
+                android:textColor="#e2e8f0" android:textColorHint="#475569"
+                android:background="#0f172a" android:padding="10dp"
+                android:inputType="textUri" android:layout_marginBottom="8dp"/>
+
+            <TextView android:layout_width="match_parent" android:layout_height="wrap_content"
+                android:text="Gateway Token" android:textColor="#94a3b8" android:textSize="12sp"/>
+            <EditText android:id="@+id/et_gateway_token"
+                android:layout_width="match_parent" android:layout_height="wrap_content"
+                android:hint="secret token from sms_gateways table"
+                android:textColor="#e2e8f0" android:textColorHint="#475569"
+                android:background="#0f172a" android:padding="10dp"
+                android:inputType="textPassword" android:layout_marginBottom="8dp"/>
+
+            <TextView android:layout_width="match_parent" android:layout_height="wrap_content"
+                android:text="Tenant ID (UUID)" android:textColor="#94a3b8" android:textSize="12sp"/>
+            <EditText android:id="@+id/et_tenant_id"
+                android:layout_width="match_parent" android:layout_height="wrap_content"
+                android:hint="xxxxxxxx-xxxx-xxxx-xxxx-xxxxxxxxxxxx"
+                android:textColor="#e2e8f0" android:textColorHint="#475569"
+                android:background="#0f172a" android:padding="10dp"
+                android:layout_marginBottom="8dp"/>
+
+            <TextView android:layout_width="match_parent" android:layout_height="wrap_content"
+                android:text="Gateway ID" android:textColor="#94a3b8" android:textSize="12sp"/>
+            <EditText android:id="@+id/et_gateway_id"
+                android:layout_width="match_parent" android:layout_height="wrap_content"
+                android:hint="e.g. hel-main or egypt-backup"
+                android:textColor="#e2e8f0" android:textColorHint="#475569"
+                android:background="#0f172a" android:padding="10dp"
+                android:layout_marginBottom="8dp"/>
+
+            <TextView android:layout_width="match_parent" android:layout_height="wrap_content"
+                android:text="SIM Card" android:textColor="#94a3b8" android:textSize="12sp"/>
+            <Spinner android:id="@+id/spinner_sim"
+                android:layout_width="match_parent" android:layout_height="wrap_content"
+                android:background="#0f172a" android:layout_marginBottom="8dp"/>
+
+            <TextView android:layout_width="match_parent" android:layout_height="wrap_content"
+                android:text="Poll interval (seconds, 10–300)" android:textColor="#94a3b8" android:textSize="12sp"/>
+            <EditText android:id="@+id/et_poll_interval"
+                android:layout_width="match_parent" android:layout_height="wrap_content"
+                android:text="20"
+                android:textColor="#e2e8f0" android:background="#0f172a" android:padding="10dp"
+                android:inputType="number" android:layout_marginBottom="12dp"/>
+
+            <LinearLayout android:layout_width="match_parent" android:layout_height="wrap_content"
+                android:orientation="horizontal">
+                <Button android:id="@+id/btn_test_connection"
+                    android:layout_width="0dp" android:layout_height="wrap_content"
+                    android:layout_weight="1" android:text="Test" android:layout_marginEnd="6dp"
+                    android:backgroundTint="#1e40af"/>
+                <Button android:id="@+id/btn_save"
+                    android:layout_width="0dp" android:layout_height="wrap_content"
+                    android:layout_weight="1" android:text="Save &amp; Start"
+                    android:backgroundTint="#0369a1"/>
+            </LinearLayout>
+
+            <TextView android:id="@+id/tv_login_status"
+                android:layout_width="match_parent" android:layout_height="wrap_content"
+                android:textColor="#94a3b8" android:textSize="13sp"
+                android:paddingTop="8dp"/>
+        </LinearLayout>
+
+        <!-- ════════════════════════════════════════
+             DIAGNOSTICS PANEL
+             ════════════════════════════════════════ -->
+        <LinearLayout
+            android:id="@+id/layout_diagnostics"
+            android:layout_width="match_parent"
+            android:layout_height="wrap_content"
+            android:orientation="vertical"
+            android:visibility="gone">
+
+            <!-- Status card -->
+            <LinearLayout android:layout_width="match_parent" android:layout_height="wrap_content"
+                android:orientation="vertical" android:background="#1e293b"
+                android:padding="14dp" android:layout_marginBottom="10dp">
+
+                <TextView android:id="@+id/tv_service_status"
+                    android:layout_width="match_parent" android:layout_height="wrap_content"
+                    android:text="✅  ACTIVE" android:textColor="#4CAF50"
+                    android:textSize="20sp" android:textStyle="bold" android:paddingBottom="6dp"/>
+                <TextView android:id="@+id/tv_gateway_info"
+                    android:layout_width="match_parent" android:layout_height="wrap_content"
+                    android:textColor="#94a3b8" android:textSize="12sp" android:paddingBottom="4dp"/>
+                <TextView android:id="@+id/tv_sim_info"
+                    android:layout_width="match_parent" android:layout_height="wrap_content"
+                    android:textColor="#94a3b8" android:textSize="12sp" android:paddingBottom="4dp"/>
+                <TextView android:id="@+id/tv_heartbeat"
+                    android:layout_width="match_parent" android:layout_height="wrap_content"
+                    android:textColor="#64748b" android:textSize="12sp" android:paddingBottom="4dp"/>
+                <TextView android:id="@+id/tv_stats"
+                    android:layout_width="match_parent" android:layout_height="wrap_content"
+                    android:textColor="#94a3b8" android:textSize="12sp"/>
+            </LinearLayout>
+
+            <!-- Control buttons -->
+            <LinearLayout android:layout_width="match_parent" android:layout_height="wrap_content"
+                android:orientation="horizontal" android:layout_marginBottom="10dp">
+                <Button android:id="@+id/btn_pause_resume"
+                    android:layout_width="0dp" android:layout_height="wrap_content"
+                    android:layout_weight="1" android:text="⏸ Pause"
+                    android:backgroundTint="#1e40af" android:layout_marginEnd="6dp"/>
+                <Button android:id="@+id/btn_force_sync"
+                    android:layout_width="0dp" android:layout_height="wrap_content"
+                    android:layout_weight="1" android:text="⟳ Sync"
+                    android:backgroundTint="#0369a1"/>
+            </LinearLayout>
+
+            <!-- Test SMS -->
+            <LinearLayout android:layout_width="match_parent" android:layout_height="wrap_content"
+                android:orientation="horizontal" android:background="#1e293b"
+                android:padding="12dp" android:layout_marginBottom="10dp">
+                <EditText android:id="@+id/et_test_phone"
+                    android:layout_width="0dp" android:layout_height="wrap_content"
+                    android:layout_weight="1" android:hint="+48xxxxxxxxx"
+                    android:textColor="#e2e8f0" android:textColorHint="#475569"
+                    android:background="#0f172a" android:padding="10dp"
+                    android:inputType="phone" android:layout_marginEnd="8dp"/>
+                <Button android:id="@+id/btn_test_sms"
+                    android:layout_width="wrap_content" android:layout_height="wrap_content"
+                    android:text="Send Test" android:backgroundTint="#065f46"/>
+            </LinearLayout>
+
+            <!-- Logs -->
+            <TextView android:layout_width="match_parent" android:layout_height="wrap_content"
+                android:text="App logs (last 50)" android:textColor="#64748b"
+                android:textSize="11sp" android:paddingBottom="4dp"/>
+            <TextView android:id="@+id/tv_logs"
+                android:layout_width="match_parent" android:layout_height="wrap_content"
+                android:textColor="#94a3b8" android:textSize="11sp"
+                android:fontFamily="monospace" android:background="#1e293b"
+                android:padding="10dp" android:layout_marginBottom="12dp"
+                android:minLines="6"/>
+
+            <!-- Logout -->
+            <Button android:id="@+id/btn_logout"
+                android:layout_width="match_parent" android:layout_height="wrap_content"
+                android:text="Disconnect Gateway"
+                android:backgroundTint="#7f1d1d"/>
+        </LinearLayout>
+
+    </LinearLayout>
+</ScrollView>
