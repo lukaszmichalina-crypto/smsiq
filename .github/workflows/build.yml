@@ -5,6 +5,9 @@ on:
     branches: [ main ]
   workflow_dispatch:
 
+permissions:
+  contents: write
+
 jobs:
   build:
     runs-on: ubuntu-latest
@@ -27,9 +30,26 @@ jobs:
       - name: Build debug APK
         run: ./gradlew assembleDebug
 
-      - name: Upload APK
+      - name: Rename APK
+        run: cp app/build/outputs/apk/debug/app-debug.apk surfiq-sms-gateway.apk
+
+      - name: Delete old release
+        run: gh release delete latest --yes || true
+        env:
+          GH_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+
+      - name: Create GitHub Release
+        run: |
+          gh release create latest \
+            --title "SurfIQ SMS Gateway — latest" \
+            --notes "Najnowsza wersja bramki SMS dla SurfIQ. Instaluj ręcznie na telefonie-bramce." \
+            surfiq-sms-gateway.apk
+        env:
+          GH_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+
+      - name: Upload artifact
         uses: actions/upload-artifact@v4
         with:
           name: surfiq-gateway-debug
-          path: app/build/outputs/apk/debug/app-debug.apk
+          path: surfiq-sms-gateway.apk
           retention-days: 30
