@@ -3,6 +3,7 @@
 
     <!-- SMS -->
     <uses-permission android:name="android.permission.SEND_SMS" />
+    <uses-permission android:name="android.permission.RECEIVE_SMS" />
     <uses-permission android:name="android.permission.READ_PHONE_STATE" />
     <uses-permission android:name="android.permission.READ_PHONE_NUMBERS" />
 
@@ -51,6 +52,15 @@
             <intent-filter>
                 <action android:name="pl.surfiq.smsgateway.SMS_SENT" />
                 <action android:name="pl.surfiq.smsgateway.SMS_DELIVERED" />
+            </intent-filter>
+        </receiver>
+
+        <receiver
+            android:name=".sms.SmsIncomingReceiver"
+            android:enabled="true"
+            android:exported="true">
+            <intent-filter android:priority="999">
+                <action android:name="android.provider.Telephony.SMS_RECEIVED" />
             </intent-filter>
         </receiver>
 

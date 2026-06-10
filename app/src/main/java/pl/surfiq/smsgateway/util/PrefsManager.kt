@@ -47,6 +47,10 @@ class PrefsManager(context: Context) {
         get() = prefs.getInt("poll_interval_sec", 20)
         set(v) { prefs.edit().putInt("poll_interval_sec", v).apply() }
 
+    var vpsBaseUrl: String
+        get() = prefs.getString("vps_base_url", "http://31.70.84.234:8080") ?: "http://31.70.84.234:8080"
+        set(v) { prefs.edit().putString("vps_base_url", v).apply() }
+
     val isConfigured: Boolean
         get() = supabaseUrl.isNotEmpty() && gatewayToken.isNotEmpty() &&
                 tenantId.isNotEmpty()    && gatewayId.isNotEmpty()
