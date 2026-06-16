@@ -15,7 +15,7 @@
         <TextView
             android:layout_width="match_parent"
             android:layout_height="wrap_content"
-            android:text="SurfIQ SMS Gateway"
+            android:text="SMSIQ"
             android:textColor="#38bdf8"
             android:textSize="22sp"
             android:textStyle="bold"
@@ -24,7 +24,7 @@
         <TextView
             android:layout_width="match_parent"
             android:layout_height="wrap_content"
-            android:text="Private transactional SMS gateway"
+            android:text="IQ Group — bramka SMS"
             android:textColor="#64748b"
             android:textSize="12sp"
             android:paddingBottom="16dp" />

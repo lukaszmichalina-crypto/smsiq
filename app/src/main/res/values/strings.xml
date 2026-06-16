@@ -1,4 +1,11 @@
 <?xml version="1.0" encoding="utf-8"?>
 <resources>
-    <string name="app_name">SurfIQ Gateway</string>
+    <string name="app_name">SMSIQ</string>
+    <string name="app_subtitle">IQ Group — bramka SMS</string>
+
+    <!-- Consent shown on first launch (sensitive permissions) -->
+    <string name="consent_title">SMSIQ — zgoda na dostęp</string>
+    <string name="consent_body">SMSIQ zamienia ten telefon w bramkę SMS dla systemów IQ Group. Aby działać, aplikacja:\n\n• wysyła i odbiera SMS przez kartę SIM,\n• synchronizuje wiadomości przychodzące do panelu,\n• może czytać kontakty, aby dopasować numery do nazw.\n\nDane trafiają wyłącznie do prywatnego backendu IQ Group (Supabase). Aplikacja jest instalowana ręcznie (sideload) i NIE jest publikowana w Google Play. Używaj tylko na firmowym telefonie-bramce za zgodą administratora.</string>
+    <string name="consent_accept">Rozumiem i zgadzam się</string>
+    <string name="consent_decline">Zamknij</string>
 </resources>

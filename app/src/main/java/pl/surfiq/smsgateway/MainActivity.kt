@@ -277,7 +277,7 @@ class MainActivity : AppCompatActivity() {
             tenantId    = prefs.tenantId,
             gatewayId   = prefs.gatewayId,
             toPhone     = phone,
-            body        = "SurfIQ Gateway test — ${SimpleDateFormat("HH:mm:ss", Locale.getDefault()).format(Date())}",
+            body        = "SMSIQ test — ${SimpleDateFormat("HH:mm:ss", Locale.getDefault()).format(Date())}",
         )
         val ok = smsSender.send(fakeMsg, prefs.simSubscriptionId)
         addLog(if (ok) "✅ Test SMS dispatched → $phone" else "❌ Test SMS dispatch failed")

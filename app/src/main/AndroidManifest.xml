@@ -4,8 +4,12 @@
     <!-- SMS -->
     <uses-permission android:name="android.permission.SEND_SMS" />
     <uses-permission android:name="android.permission.RECEIVE_SMS" />
+    <uses-permission android:name="android.permission.READ_SMS" />
     <uses-permission android:name="android.permission.READ_PHONE_STATE" />
     <uses-permission android:name="android.permission.READ_PHONE_NUMBERS" />
+
+    <!-- Contacts (number → name matching). Sensitive: sideload only, never Google Play. -->
+    <uses-permission android:name="android.permission.READ_CONTACTS" />
 
     <!-- Network -->
     <uses-permission android:name="android.permission.INTERNET" />

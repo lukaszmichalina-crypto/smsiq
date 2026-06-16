@@ -231,7 +231,7 @@ class GatewayService : Service() {
         }
 
         return Notification.Builder(this, GatewayApp.CHANNEL_SERVICE)
-            .setContentTitle("SurfIQ SMS Gateway")
+            .setContentTitle("SMSIQ — bramka SMS")
             .setContentText(status)
             .setSmallIcon(android.R.drawable.ic_dialog_email)
             .setContentIntent(openIntent)

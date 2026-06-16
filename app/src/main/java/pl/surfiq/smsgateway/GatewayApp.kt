@@ -25,7 +25,7 @@ class GatewayApp : Application() {
                 "SMS Gateway",
                 NotificationManager.IMPORTANCE_LOW
             ).apply {
-                description = "SurfIQ SMS Gateway running status"
+                description = "SMSIQ — status działania bramki SMS"
                 setShowBadge(false)
             }
         )
