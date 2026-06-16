@@ -18,5 +18,7 @@ CREATE INDEX IF NOT EXISTS idx_sms_contacts_tenant_phone
 
 ALTER TABLE sms_contacts ENABLE ROW LEVEL SECURITY;
 
-CREATE POLICY sms_contacts_tenant_read ON sms_contacts
-  FOR SELECT USING (tenant_id = (SELECT tenant_id FROM user_profiles WHERE id = auth.uid()));
+DROP POLICY IF EXISTS sms_contacts_staff_read ON sms_contacts;
+CREATE POLICY sms_contacts_staff_read ON sms_contacts
+  FOR SELECT TO authenticated
+  USING (EXISTS (SELECT 1 FROM user_roles WHERE user_id = auth.uid() AND role IN ('admin','staff')));

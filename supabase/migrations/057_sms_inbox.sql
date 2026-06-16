@@ -34,11 +34,16 @@ CREATE INDEX IF NOT EXISTS idx_sms_inbox_gateway
 CREATE INDEX IF NOT EXISTS idx_sms_inbox_unread
   ON sms_inbox (tenant_id, is_read) WHERE is_read = FALSE;
 
--- RLS — same model as sms_outbox. Edge Functions use service_role and bypass RLS.
+-- RLS — mirrors the panel's standard staff policy (user_roles). Edge Functions
+-- use service_role and bypass RLS, so inbound writes work regardless.
 ALTER TABLE sms_inbox ENABLE ROW LEVEL SECURITY;
 
-CREATE POLICY sms_inbox_tenant_read ON sms_inbox
-  FOR SELECT USING (tenant_id = (SELECT tenant_id FROM user_profiles WHERE id = auth.uid()));
+DROP POLICY IF EXISTS sms_inbox_staff_read ON sms_inbox;
+CREATE POLICY sms_inbox_staff_read ON sms_inbox
+  FOR SELECT TO authenticated
+  USING (EXISTS (SELECT 1 FROM user_roles WHERE user_id = auth.uid() AND role IN ('admin','staff')));
 
-CREATE POLICY sms_inbox_tenant_update ON sms_inbox
-  FOR UPDATE USING (tenant_id = (SELECT tenant_id FROM user_profiles WHERE id = auth.uid()));
+DROP POLICY IF EXISTS sms_inbox_staff_update ON sms_inbox;
+CREATE POLICY sms_inbox_staff_update ON sms_inbox
+  FOR UPDATE TO authenticated
+  USING (EXISTS (SELECT 1 FROM user_roles WHERE user_id = auth.uid() AND role IN ('admin','staff')));
