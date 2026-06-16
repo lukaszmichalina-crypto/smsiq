@@ -19,7 +19,9 @@ import pl.surfiq.smsgateway.api.SupabaseGatewayClient
 import pl.surfiq.smsgateway.model.GatewayConfig
 import pl.surfiq.smsgateway.model.SmsMessage
 import pl.surfiq.smsgateway.service.GatewayService
+import pl.surfiq.smsgateway.sms.InboxBackfill
 import pl.surfiq.smsgateway.sms.SmsSender
+import pl.surfiq.smsgateway.util.ContactsHelper
 import pl.surfiq.smsgateway.util.PrefsManager
 import java.text.SimpleDateFormat
 import java.util.*
@@ -56,6 +58,8 @@ class MainActivity : AppCompatActivity() {
     private lateinit var btnToggle:        Button
     private lateinit var btnForceSync:     Button
     private lateinit var btnTestSms:       Button
+    private lateinit var btnBackfill:      Button
+    private lateinit var btnSyncContacts:  Button
     private lateinit var btnLogout:        Button
     private lateinit var etTestPhone:      EditText
 
@@ -78,6 +82,25 @@ class MainActivity : AppCompatActivity() {
         smsSender = SmsSender(this)
 
         bindViews()
+
+        if (prefs.consentAccepted) startApp() else showConsentDialog()
+    }
+
+    /** First-launch consent for sensitive SMS/contacts access (sideload-only product). */
+    private fun showConsentDialog() {
+        AlertDialog.Builder(this)
+            .setTitle(R.string.consent_title)
+            .setMessage(R.string.consent_body)
+            .setCancelable(false)
+            .setPositiveButton(R.string.consent_accept) { _, _ ->
+                prefs.consentAccepted = true
+                startApp()
+            }
+            .setNegativeButton(R.string.consent_decline) { _, _ -> finish() }
+            .show()
+    }
+
+    private fun startApp() {
         requestMissingPermissions()
         askBatteryOptimizationExemption()
 
@@ -130,6 +153,8 @@ class MainActivity : AppCompatActivity() {
         btnToggle     = findViewById(R.id.btn_pause_resume)
         btnForceSync  = findViewById(R.id.btn_force_sync)
         btnTestSms    = findViewById(R.id.btn_test_sms)
+        btnBackfill     = findViewById(R.id.btn_backfill)
+        btnSyncContacts = findViewById(R.id.btn_sync_contacts)
         btnLogout     = findViewById(R.id.btn_logout)
         etTestPhone   = findViewById(R.id.et_test_phone)
 
@@ -140,6 +165,8 @@ class MainActivity : AppCompatActivity() {
         btnToggle.setOnClickListener    { togglePause() }
         btnForceSync.setOnClickListener { forceSync() }
         btnTestSms.setOnClickListener   { sendTestSms() }
+        btnBackfill.setOnClickListener  { runBackfill() }
+        btnSyncContacts.setOnClickListener { syncContacts() }
         btnLogout.setOnClickListener    { confirmLogout() }
     }
 
@@ -281,6 +308,62 @@ class MainActivity : AppCompatActivity() {
         )
         val ok = smsSender.send(fakeMsg, prefs.simSubscriptionId)
         addLog(if (ok) "✅ Test SMS dispatched → $phone" else "❌ Test SMS dispatch failed")
+    }
+
+    // ── Inbox backfill / contacts sync ──────────────────────────────────────────
+
+    private fun hasPerm(p: String) =
+        ContextCompat.checkSelfPermission(this, p) == PackageManager.PERMISSION_GRANTED
+
+    private fun gwClient() = SupabaseGatewayClient(
+        GatewayConfig(prefs.supabaseUrl, prefs.gatewayToken, prefs.tenantId, prefs.gatewayId)
+    )
+
+    private fun runBackfill() {
+        if (!prefs.isConfigured) {
+            Toast.makeText(this, "Najpierw skonfiguruj bramkę", Toast.LENGTH_SHORT).show(); return
+        }
+        if (!hasPerm(Manifest.permission.READ_SMS)) {
+            ActivityCompat.requestPermissions(
+                this, arrayOf(Manifest.permission.READ_SMS, Manifest.permission.READ_CONTACTS), 101
+            )
+            Toast.makeText(this, "Przyznaj dostęp do SMS i ponów import", Toast.LENGTH_LONG).show()
+            return
+        }
+        addLog("📥 Import historii SMS — start…")
+        scope.launch {
+            val res = withContext(Dispatchers.IO) { InboxBackfill.run(applicationContext, gwClient()) }
+            addLog("📥 Import: ${res.inserted} nowych / ${res.scanned} przejrzanych")
+            Toast.makeText(
+                this@MainActivity,
+                "Import: ${res.inserted} nowych z ${res.scanned}",
+                Toast.LENGTH_LONG,
+            ).show()
+        }
+    }
+
+    private fun syncContacts() {
+        if (!prefs.isConfigured) {
+            Toast.makeText(this, "Najpierw skonfiguruj bramkę", Toast.LENGTH_SHORT).show(); return
+        }
+        if (!hasPerm(Manifest.permission.READ_CONTACTS)) {
+            ActivityCompat.requestPermissions(
+                this, arrayOf(Manifest.permission.READ_CONTACTS), 102
+            )
+            Toast.makeText(this, "Przyznaj dostęp do kontaktów i ponów", Toast.LENGTH_LONG).show()
+            return
+        }
+        addLog("👥 Synchronizacja kontaktów…")
+        scope.launch {
+            val n = withContext(Dispatchers.IO) {
+                val contacts = ContactsHelper.readAll(applicationContext).map {
+                    mapOf<String, Any?>("phone_e164" to it.first, "display_name" to it.second)
+                }
+                gwClient().syncContacts(contacts)
+            }
+            addLog("👥 Kontakty zsynchronizowane: $n")
+            Toast.makeText(this@MainActivity, "Kontakty: $n", Toast.LENGTH_LONG).show()
+        }
     }
 
     private fun confirmLogout() {

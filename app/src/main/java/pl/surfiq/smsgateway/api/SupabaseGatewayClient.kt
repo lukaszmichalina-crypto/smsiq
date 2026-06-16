@@ -122,4 +122,35 @@ class SupabaseGatewayClient(private val config: GatewayConfig) {
         metadata?.let { payload["metadata"] = it }
         return post("gateway-log", payload)?.use { it.isSuccessful } ?: false
     }
+
+    /**
+     * Pushes inbound SMS to sms_inbox via the gateway-inbox function.
+     * Each item: from_phone, body, received_at (ISO), dedup_key, source ("live"|"backfill"),
+     * optional contact_name. Returns number of rows actually inserted, or -1 on network/HTTP error.
+     */
+    fun pushInbox(messages: List<Map<String, Any?>>): Int {
+        if (messages.isEmpty()) return 0
+        val resp = post("gateway-inbox", mapOf("messages" to messages)) ?: return -1
+        return resp.use { r ->
+            if (!r.isSuccessful) { Log.w(TAG, "pushInbox ${r.code}"); return -1 }
+            val json = r.body?.string() ?: return 0
+            val m: Map<String, Any?> = gson.fromJson(json, object : TypeToken<Map<String, Any?>>() {}.type)
+            (m["inserted"] as? Double)?.toInt() ?: 0
+        }
+    }
+
+    /**
+     * Upserts device contacts to sms_contacts via the gateway-inbox function.
+     * Each item: phone_e164, display_name. Returns upserted count, or -1 on error.
+     */
+    fun syncContacts(contacts: List<Map<String, Any?>>): Int {
+        if (contacts.isEmpty()) return 0
+        val resp = post("gateway-inbox", mapOf("contacts" to contacts)) ?: return -1
+        return resp.use { r ->
+            if (!r.isSuccessful) { Log.w(TAG, "syncContacts ${r.code}"); return -1 }
+            val json = r.body?.string() ?: return 0
+            val m: Map<String, Any?> = gson.fromJson(json, object : TypeToken<Map<String, Any?>>() {}.type)
+            (m["contacts_upserted"] as? Double)?.toInt() ?: 0
+        }
+    }
 }

@@ -51,6 +51,10 @@ class PrefsManager(context: Context) {
         get() = prefs.getString("vps_base_url", "http://31.70.84.234:8080") ?: "http://31.70.84.234:8080"
         set(v) { prefs.edit().putString("vps_base_url", v).apply() }
 
+    var consentAccepted: Boolean
+        get() = prefs.getBoolean("consent_accepted", false)
+        set(v) { prefs.edit().putBoolean("consent_accepted", v).apply() }
+
     val isConfigured: Boolean
         get() = supabaseUrl.isNotEmpty() && gatewayToken.isNotEmpty() &&
                 tenantId.isNotEmpty()    && gatewayId.isNotEmpty()

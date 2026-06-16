@@ -159,6 +159,19 @@
                     android:backgroundTint="#0369a1"/>
             </LinearLayout>
 
+            <!-- Inbox / contacts import -->
+            <LinearLayout android:layout_width="match_parent" android:layout_height="wrap_content"
+                android:orientation="horizontal" android:layout_marginBottom="10dp">
+                <Button android:id="@+id/btn_backfill"
+                    android:layout_width="0dp" android:layout_height="wrap_content"
+                    android:layout_weight="1" android:text="📥 Import SMS"
+                    android:backgroundTint="#4338ca" android:layout_marginEnd="6dp"/>
+                <Button android:id="@+id/btn_sync_contacts"
+                    android:layout_width="0dp" android:layout_height="wrap_content"
+                    android:layout_weight="1" android:text="👥 Kontakty"
+                    android:backgroundTint="#6d28d9"/>
+            </LinearLayout>
+
             <!-- Test SMS -->
             <LinearLayout android:layout_width="match_parent" android:layout_height="wrap_content"
                 android:orientation="horizontal" android:background="#1e293b"

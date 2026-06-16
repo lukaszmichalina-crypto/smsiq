@@ -45,7 +45,10 @@ class GatewayService : Service() {
     private var isCharging   = false
     private val batteryReceiver = object : BroadcastReceiver() {
         override fun onReceive(ctx: Context, intent: Intent) {
-            batteryLevel = intent.getIntExtra(BatteryManager.EXTRA_LEVEL, 100)
+            // EXTRA_LEVEL is raw and must be scaled by EXTRA_SCALE — not always 0..100.
+            val level = intent.getIntExtra(BatteryManager.EXTRA_LEVEL, -1)
+            val scale = intent.getIntExtra(BatteryManager.EXTRA_SCALE, -1)
+            if (level >= 0 && scale > 0) batteryLevel = level * 100 / scale
             isCharging   = intent.getIntExtra(BatteryManager.EXTRA_PLUGGED, 0) != 0
         }
     }
@@ -194,7 +197,12 @@ class GatewayService : Service() {
 
     private fun sendHeartbeat() {
         val status = if (isPaused) "paused" else "online"
-        client?.heartbeat(Build.MODEL, null, batteryLevel, isCharging, "unknown", status)
+        // Read capacity directly each beat — robust even if the sticky battery
+        // broadcast was missed (this is what made the panel show a stale 1%).
+        val bm    = getSystemService(Context.BATTERY_SERVICE) as? BatteryManager
+        val level = bm?.getIntProperty(BatteryManager.BATTERY_PROPERTY_CAPACITY)
+            ?.takeIf { it in 0..100 } ?: batteryLevel
+        client?.heartbeat(Build.MODEL, null, level, isCharging, "ok", status)
         lastHeartbeat = System.currentTimeMillis()
     }
 
