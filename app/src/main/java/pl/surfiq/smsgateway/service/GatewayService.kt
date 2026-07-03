@@ -13,6 +13,7 @@ import pl.surfiq.smsgateway.sms.SmsSender
 import pl.surfiq.smsgateway.util.PrefsManager
 import pl.surfiq.smsgateway.util.RateLimiter
 import pl.surfiq.smsgateway.util.RetryManager
+import pl.surfiq.smsgateway.service.WatchdogReceiver
 
 class GatewayService : Service() {
 
@@ -40,6 +41,9 @@ class GatewayService : Service() {
     private var pollJob:   Job? = null
     private var hbJob:     Job? = null
 
+    // WakeLock — keeps CPU alive during SmsManager dispatch (critical on MIUI)
+    private var wakeLock: PowerManager.WakeLock? = null
+
     // Battery state
     private var batteryLevel = 100
     private var isCharging   = false
@@ -62,6 +66,7 @@ class GatewayService : Service() {
         registerReceiver(batteryReceiver, IntentFilter(Intent.ACTION_BATTERY_CHANGED))
         startForegroundCompat("Starting…")
         isRunning = true
+        WatchdogReceiver.schedule(this)
         Log.d(TAG, "Service created")
     }
 
@@ -96,6 +101,7 @@ class GatewayService : Service() {
     override fun onDestroy() {
         isRunning = false
         scope.cancel()
+        releaseWakeLock()
         try { unregisterReceiver(batteryReceiver) } catch (_: Exception) {}
 
         // Best-effort offline heartbeat
@@ -107,6 +113,35 @@ class GatewayService : Service() {
             }
         }
         super.onDestroy()
+    }
+
+    override fun onTaskRemoved(rootIntent: Intent?) {
+        // MIUI may kill the service when user swipes the app from recents — schedule restart
+        val restartIntent = Intent(applicationContext, GatewayService::class.java)
+        val pi = PendingIntent.getService(
+            applicationContext, 1,
+            restartIntent,
+            PendingIntent.FLAG_ONE_SHOT or PendingIntent.FLAG_IMMUTABLE
+        )
+        val am = getSystemService(Context.ALARM_SERVICE) as AlarmManager
+        am.set(AlarmManager.RTC_WAKEUP, System.currentTimeMillis() + 5_000, pi)
+        Log.w(TAG, "onTaskRemoved — restart scheduled in 5s")
+        super.onTaskRemoved(rootIntent)
+    }
+
+    // ── WakeLock ─────────────────────────────────────────────────────────────
+
+    private fun acquireWakeLock() {
+        val pm = getSystemService(Context.POWER_SERVICE) as PowerManager
+        wakeLock = pm.newWakeLock(
+            PowerManager.PARTIAL_WAKE_LOCK,
+            "SurfIQGateway:SmsSend"
+        ).apply { acquire(30_000) } // 30s hard timeout — SMS must be dispatched by then
+    }
+
+    private fun releaseWakeLock() {
+        runCatching { if (wakeLock?.isHeld == true) wakeLock?.release() }
+        wakeLock = null
     }
 
     // ── Internal ─────────────────────────────────────────────────────────────
@@ -169,29 +204,37 @@ class GatewayService : Service() {
             return
         }
 
-        // Mark sending
-        c.updateStatus(msg.id, "sending")
+        // WakeLock: keep CPU alive for the full SmsManager dispatch cycle.
+        // MIUI can freeze coroutine schedulers between updateStatus("sending") and the
+        // actual SmsManager callback, leaving messages stuck as "sending" in Supabase.
+        acquireWakeLock()
+        try {
+            // Mark sending
+            c.updateStatus(msg.id, "sending")
 
-        val dispatched = withContext(Dispatchers.Main) {
-            smsSender.send(msg, prefs.simSubscriptionId)
-        }
-
-        if (dispatched) {
-            rateLimiter.record()
-            sentToday++
-            lastStatus = "Last sent: ${msg.toPhone.takeLast(6)}"
-            updateNotif("Active — sent today: $sentToday")
-            // Status will be updated by SmsStatusReceiver callback
-        } else {
-            val attempt = msg.attempts + 1
-            if (attempt >= msg.maxAttempts) {
-                c.updateStatus(msg.id, "manual_review", "Dispatch failed after ${msg.maxAttempts} attempts")
-                c.log("error", "SMS ${msg.id} moved to manual_review", msg.id)
-            } else {
-                val nextAt = RetryManager.nextScheduledIso(attempt)
-                c.updateStatus(msg.id, "retrying", "SmsManager dispatch failed", nextAt)
-                c.log("warning", "SMS ${msg.id} dispatch failed, attempt $attempt/${msg.maxAttempts}", msg.id)
+            val dispatched = withContext(Dispatchers.Main) {
+                smsSender.send(msg, prefs.simSubscriptionId)
             }
+
+            if (dispatched) {
+                rateLimiter.record()
+                sentToday++
+                lastStatus = "Last sent: ${msg.toPhone.takeLast(6)}"
+                updateNotif("Active — sent today: $sentToday")
+                // Status will be updated by SmsStatusReceiver callback
+            } else {
+                val attempt = msg.attempts + 1
+                if (attempt >= msg.maxAttempts) {
+                    c.updateStatus(msg.id, "manual_review", "Dispatch failed after ${msg.maxAttempts} attempts")
+                    c.log("error", "SMS ${msg.id} moved to manual_review", msg.id)
+                } else {
+                    val nextAt = RetryManager.nextScheduledIso(attempt)
+                    c.updateStatus(msg.id, "retrying", "SmsManager dispatch failed", nextAt)
+                    c.log("warning", "SMS ${msg.id} dispatch failed, attempt $attempt/${msg.maxAttempts}", msg.id)
+                }
+            }
+        } finally {
+            releaseWakeLock()
         }
     }
 

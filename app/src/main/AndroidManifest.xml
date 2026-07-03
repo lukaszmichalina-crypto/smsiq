@@ -25,6 +25,9 @@
     <!-- Notifications (Android 13+) -->
     <uses-permission android:name="android.permission.POST_NOTIFICATIONS" />
 
+    <!-- AlarmManager watchdog for MIUI keep-alive (Android 12+) -->
+    <uses-permission android:name="android.permission.SCHEDULE_EXACT_ALARM" />
+
     <application
         android:name=".GatewayApp"
         android:allowBackup="false"
@@ -77,6 +80,11 @@
                 <action android:name="android.intent.action.MY_PACKAGE_REPLACED" />
             </intent-filter>
         </receiver>
+
+        <receiver
+            android:name=".service.WatchdogReceiver"
+            android:enabled="true"
+            android:exported="false" />
 
     </application>
 </manifest>
