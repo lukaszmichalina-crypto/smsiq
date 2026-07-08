@@ -6,6 +6,7 @@ import com.google.gson.reflect.TypeToken
 import okhttp3.*
 import okhttp3.MediaType.Companion.toMediaType
 import okhttp3.RequestBody.Companion.toRequestBody
+import pl.surfiq.smsgateway.BuildConfig
 import pl.surfiq.smsgateway.model.GatewayConfig
 import pl.surfiq.smsgateway.model.SmsMessage
 import java.io.IOException
@@ -96,9 +97,10 @@ class SupabaseGatewayClient(private val config: GatewayConfig) {
         isCharging:   Boolean,
         signalStatus: String,
         status:       String = "online",
-        appVersion:   String = "1.0.0",
+        appVersion:   String = BuildConfig.VERSION_NAME,
+        sentToday:    Int?   = null,
     ): Boolean {
-        val payload = mapOf(
+        val payload = mutableMapOf<String, Any?>(
             "device_name"    to deviceName,
             "phone_number"   to phoneNumber,
             "battery_level"  to batteryLevel,
@@ -107,6 +109,7 @@ class SupabaseGatewayClient(private val config: GatewayConfig) {
             "status"         to status,
             "app_version"    to appVersion,
         )
+        sentToday?.let { payload["sent_today"] = it }
         return post("gateway-heartbeat", payload)?.use { it.isSuccessful } ?: false
     }
 

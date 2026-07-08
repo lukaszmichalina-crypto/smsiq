@@ -46,8 +46,10 @@ class SmsStatusReceiver : BroadcastReceiver() {
         attempts:    Int,
         maxAttempts: Int,
     ) {
-        // For multipart: only update status on last part confirmation
-        if (partIndex < totalParts - 1) {
+        // Multipart: a FAILED result of ANY part means the SMS failed — report it.
+        // Only a SUCCESSFUL non-last part is skipped (final "sent" comes from the
+        // last part). v1.1.0 ignored error codes of non-last parts entirely.
+        if (partIndex < totalParts - 1 && resultCode == Activity.RESULT_OK) {
             Log.d(TAG, "Part $partIndex/$totalParts OK for $smsId")
             return
         }

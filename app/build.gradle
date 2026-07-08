@@ -11,19 +11,40 @@ android {
         applicationId "pl.surfiq.smsgateway"
         minSdk 26
         targetSdk 34
-        versionCode 2
-        versionName "1.1.0"
+        versionCode 3
+        versionName "1.2.0"
+    }
+
+    // Stable release signing — the CI runner's auto-generated debug keystore is
+    // EPHEMERAL (new key every build → "App not installed" on update and the
+    // phone loses its gateway config). Keystore lives in the repo; this is a
+    // private sideload-only tool, so plaintext credentials in gradle.properties
+    // are an accepted trade-off.
+    signingConfigs {
+        release {
+            storeFile file('../release-signing.keystore')
+            storeType 'pkcs12'
+            storePassword project.findProperty('SMSIQ_STORE_PASSWORD') ?: ''
+            keyAlias project.findProperty('SMSIQ_KEY_ALIAS') ?: 'smsiq'
+            keyPassword project.findProperty('SMSIQ_KEY_PASSWORD') ?: ''
+        }
     }
 
     buildTypes {
         release {
             minifyEnabled false   // keep false for private APK — easier debugging
             proguardFiles getDefaultProguardFile('proguard-android-optimize.txt'), 'proguard-rules.pro'
+            signingConfig signingConfigs.release
+        }
+        debug {
+            // Same stable key for local debug installs — updates never clash
+            signingConfig signingConfigs.release
         }
     }
 
     buildFeatures {
         viewBinding true
+        buildConfig true
     }
 
     compileOptions {
@@ -46,4 +67,5 @@ dependencies {
     implementation 'androidx.security:security-crypto:1.0.0'
     implementation 'com.google.code.gson:gson:2.11.0'
     implementation 'androidx.lifecycle:lifecycle-service:2.8.3'
+    implementation 'androidx.work:work-runtime-ktx:2.9.1'
 }
