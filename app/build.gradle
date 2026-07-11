@@ -11,8 +11,8 @@ android {
         applicationId "pl.surfiq.smsgateway"
         minSdk 26
         targetSdk 34
-        versionCode 3
-        versionName "1.2.0"
+        versionCode 4
+        versionName "1.2.1"
     }
 
     // Stable release signing — the CI runner's auto-generated debug keystore is
